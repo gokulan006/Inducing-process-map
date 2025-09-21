@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPMN Process Map Visualizer</title>
+
+    <!-- Include bpmn-js CSS and JS from CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.11.1/dist/assets/diagram-js.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.11.1/dist/assets/bpmn-js.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@17.11.1/dist/assets/bpmn-font/css/bpmn-embedded.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .xml-input {
+            width: 100%;
+            height: 120px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .error {
+            color: #dc3545;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 4px;
+        }
+
+        .success {
+            color: #155724;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔄 BPMN Process Map Visualizer</h1>
+        <p>Interactive Business Process Model and Notation (BPMN) Diagram Viewer</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-primary" onclick="loadSampleBPMN()">Load Sample Process</button>
+        <button class="btn btn-secondary" onclick="zoomToFit()">Zoom to Fit</button>
+        <button class="btn btn-secondary" onclick="zoomIn()">Zoom In</button>
+        <button class="btn btn-secondary" onclick="zoomOut()">Zoom Out</button>
+        <button class="btn btn-success" onclick="exportSVG()">Export as SVG</button>
+    </div>
+
+    <!-- BPMN Canvas -->
+    <div id="canvas"></div>
+
+    <!-- Information Panel -->
+    <div class="info-panel">
+        <h3>📝 Load Custom BPMN XML</h3>
+        <p>Paste your BPMN XML below and click "Load Custom BPMN" to visualize your process:</p>
+        <textarea id="xmlInput" class="xml-input" placeholder="Paste your BPMN XML here..."></textarea>
+        <br><br>
+        <button class="btn btn-primary" onclick="loadCustomBPMN()">Load Custom BPMN</button>
+        <div id="message"></div>
+    </div>
+
+    <!-- Include bpmn-js library -->
+    <script src="https://unpkg.com/bpmn-js@17.11.1/dist/bpmn-viewer.development.js"></script>
+
+    <script>
+        // Initialize BPMN Viewer
+        const viewer = new BpmnJS({
+            container: '#canvas'
+        });
+
+        // Fixed BPMN XML with proper positioning (bpmndi elements)
+        const sampleBPMNXML = 'bpmn XML code'
+        function loadBPMN(xmlString) {
+            viewer.importXML(xmlString)
+                .then(function(result) {
+                    console.log('BPMN diagram imported successfully!');
+                    showMessage('✅ BPMN diagram loaded successfully!', 'success');
+
+                    // Auto-zoom to fit after a short delay
+                    setTimeout(() => {
+                        zoomToFit();
+                    }, 300);
+
+                    // Add click listeners to elements
+                    addElementClickListeners();
+                })
+                .catch(function(err) {
+                    console.error('Failed to import BPMN:', err);
+                    showMessage('❌ Failed to load BPMN diagram: ' + err.message, 'error');
+                });
+        }
+
+        // Load sample BPMN
+        function loadSampleBPMN() {
+            loadBPMN(sampleBPMNXML);
+        }
+
+        // Load custom BPMN from textarea
+        function loadCustomBPMN() {
+            const xmlInput = document.getElementById('xmlInput').value.trim();
+            if (!xmlInput) {
+                showMessage('❌ Please paste BPMN XML in the text area first.', 'error');
+                return;
+            }
+            loadBPMN(xmlInput);
+        }
+
+        // Zoom functions
+        function zoomToFit() {
+            const canvas = viewer.get('canvas');
+            canvas.zoom('fit-viewport');
+        }
+
+        function zoomIn() {
+            const canvas = viewer.get('canvas');
+            canvas.zoom(canvas.zoom() + 0.1);
+        }
+
+        function zoomOut() {
+            const canvas = viewer.get('canvas');
+            canvas.zoom(Math.max(0.1, canvas.zoom() - 0.1));
+        }
+
+        // Export as SVG
+        function exportSVG() {
+            viewer.saveSVG()
+                .then(function(result) {
+                    const svgBlob = new Blob([result.svg], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(svgBlob);
+
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'process-diagram.svg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    showMessage('✅ SVG exported successfully!', 'success');
+                })
+                .catch(function(err) {
+                    console.error('Failed to export SVG:', err);
+                    showMessage('❌ Failed to export SVG: ' + err.message, 'error');
+                });
+        }
+
+        // Show messages to user
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = message;
+            messageDiv.className = type;
+
+            // Clear message after 5 seconds
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+
+        // Add click listeners to BPMN elements
+        function addElementClickListeners() {
+            const eventBus = viewer.get('eventBus');
+
+            eventBus.on('element.click', function(event) {
+                const element = event.element;
+                console.log('Clicked element:', element);
+
+                // Show element details
+                let details = `📋 Element Details:\n`;
+                details += `ID: ${element.id}\n`;
+                details += `Type: ${element.type}\n`;
+                if (element.businessObject.name) {
+                    details += `Name: ${element.businessObject.name}\n`;
+                }
+
+                alert(details);
+            });
+        }
+
+        // Auto-load sample BPMN on page load
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                loadSampleBPMN();
+            }, 1000);
+        });
+
+        // Handle keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                switch(event.key) {
+                    case '=':
+                    case '+':
+                        event.preventDefault();
+                        zoomIn();
+                        break;
+                    case '-':
+                        event.preventDefault();
+                        zoomOut();
+                        break;
+                    case '0':
+                        event.preventDefault();
+                        zoomToFit();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Add to your main CSS file or component */
+/* BPMN Viewer Styles */
+.bpmn-container {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.bpmn-viewer {
+  height: 500px;
+  width: 100%;
+  position: relative;
+}
+
+/* Hide editing tools in viewer mode */
+.bpmn-viewer .djs-palette {
+  display: none !important;
+}
+
+/* Style the canvas background */
+.bpmn-viewer .djs-container {
+  background: #fafafa;
+}
+
+/* BPMN element styling */
+.bpmn-viewer .djs-element {
+  font-family: 'Arial', sans-serif;
+}
+
+/* BPMN shape styles */
+.bpmn-viewer .djs-shape .djs-visual > :first-child {
+  fill: #ffffff;
+  stroke: #000000;
+  stroke-width: 2;
+}
+
+/* Start events */
+.bpmn-viewer .djs-shape[data-element-id*="StartEvent"] .djs-visual > :first-child {
+  fill: #e8f5e8;
+  stroke: #52c41a;
+}
+
+/* End events */
+.bpmn-viewer .djs-shape[data-element-id*="EndEvent"] .djs-visual > :first-child {
+  fill: #fff2e8;
+  stroke: #fa8c16;
+}
+
+/* Tasks */
+.bpmn-viewer .djs-shape[data-element-id*="Task"] .djs-visual > :first-child {
+  fill: #f0f7ff;
+  stroke: #1890ff;
+}
+
+/* Gateways */
+.bpmn-viewer .djs-shape[data-element-id*="Gateway"] .djs-visual > :first-child {
+  fill: #fff7e6;
+  stroke: #faad14;
+}
+
+/* Sequence flows */
+.bpmn-viewer .djs-connection .djs-visual > :first-child {
+  stroke: #666666;
+  stroke-width: 1.5;
+}
+
+/* Loading overlay */
+.bpmn-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: 8px;
+}
+
+/* Zoom controls */
+.bpmn-zoom-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bpmn-zoom-btn {
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.bpmn-zoom-btn:hover {
+  background: #f5f5f5;
+}
+
+/* Fullscreen styles */
+.bpmn-fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  background: white;
+}
+
+/* Error state styles */
+.bpmn-error {
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  color: #cf1322;
+}
+
+/* Success state styles */
+.bpmn-success {
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  color: #52c41a;
+}
