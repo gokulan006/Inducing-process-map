@@ -232,6 +232,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ by the ProcessMapper AI Team**
-
-*Transforming business processes, one document at a time.*
+ 
