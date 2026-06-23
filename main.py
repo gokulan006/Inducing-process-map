@@ -26,12 +26,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def init_db():
-    """Initialize database with proper tables"""
+     
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
-        # Create saved processes table
+        
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS saved_processes (
             id TEXT PRIMARY KEY,
@@ -42,7 +42,7 @@ def init_db():
         )
         ''')
         
-        # Create tasks table
+        
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS tasks (
             id TEXT PRIMARY KEY,
@@ -56,7 +56,7 @@ def init_db():
         )
         ''')
         
-        # Create indexes for better performance
+        
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_saved_processes_task_id ON saved_processes(task_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_saved_processes_created_at ON saved_processes(created_at)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)')
@@ -74,12 +74,11 @@ def init_db():
 init_db()
 
 
-# Configure logging
+ 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# FastAPI app initialization
+ 
 app = FastAPI(
     title="ProcessMapper AI Backend",
     description="Complete backend API for SOP Processing and Visualization",
@@ -87,17 +86,16 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
-
-# CORS middleware for React frontend
+ 
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000", 
     "http://localhost:3001",
     "http://127.0.0.1:3001",
-    "http://localhost:5173",  # Vite default
-    "http://127.0.0.1:5173",  # Vite default
-    "http://localhost:5174",  # Vite alternate
-    "http://127.0.0.1:5174",  # Vite alternate
+    "http://localhost:5173",  
+    "http://127.0.0.1:5173",   
+    "http://localhost:5174",   
+    "http://127.0.0.1:5174",  
 ]
 
 app.add_middleware(
@@ -107,8 +105,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Directory setup
+ 
 UPLOAD_DIR = Path("./uploads")
 RESULTS_DIR = Path("./results") 
 VISUALIZATIONS_DIR = Path("./visualizations")
@@ -118,12 +115,12 @@ STATIC_DIR = Path("./static")
 for directory in [UPLOAD_DIR, RESULTS_DIR, VISUALIZATIONS_DIR, HISTORY_DIR, STATIC_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
-# In-memory storage for demo (use Redis/PostgreSQL in production)
+ 
 tasks: Dict[str, Dict[str, Any]] = {}
 chat_sessions: Dict[str, List[Dict]] = defaultdict(list)
 document_history: List[Dict[str, Any]] = []
 
-# OpenAI client setup - FIXED MODEL NAME
+ 
 openai_client = openai.OpenAI(
     api_key= os.environ.get("OPENAI_API_KEY")
 )
@@ -132,22 +129,22 @@ class SaveProcessRequest(BaseModel):
     name: str
 
 
-# FIXED: Integrated FlexibleSOPProcessor directly into main.py
+ 
 class FlexibleSOPProcessor:
     """
     Smart SOP processor that automatically detects any number of processes
     and adapts the output schema accordingly.
     """
     
-    def __init__(self, target_model="gpt-5"):  # FIXED: Use valid model name
+    def __init__(self, target_model="gpt-5"):  
         try:
             self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
         except Exception as e:
             logger.error(f"Failed to load tokenizer: {e}")
-            # Fallback: simple token counting
+          
             self.tokenizer = None
         
-        # FIXED: Updated model limits with correct model names
+      
         self.model_limits = {
             "gpt-3.5-turbo": 4000,
             "gpt-4": 8000,
@@ -159,7 +156,7 @@ class FlexibleSOPProcessor:
         self.max_tokens = self.model_limits.get(target_model, 4000)
         self.target_model = target_model
         
-        # Process detection patterns - flexible for any format
+         
         self.process_patterns = [
             # Standard format: "2.0 AP-001: Invoice Processing"
             r'^(\d+\.\d+)\s+([A-Z]+-\d+):\s*(.+)$',
@@ -174,24 +171,23 @@ class FlexibleSOPProcessor:
         ]
     
     def get_token_count(self, text: str) -> int:
-        """Get token count with fallback"""
+         
         if self.tokenizer:
             return len(self.tokenizer.encode(text))
         else:
-            # Fallback: rough estimation (4 chars per token)
+            
             return len(text) // 4
     
     def process_document(self, file_path: str) -> Dict:
         """
         Main processing function that automatically detects processes
         """
-        # Extract text from PDF
+        
         raw_text = self.extract_pdf_text(file_path)
         
-        # Analyze document size
-        token_count = self.get_token_count(raw_text)
         
-        # Detect processes dynamically
+        token_count = self.get_token_count(raw_text)
+         
         detected_processes = self.detect_processes(raw_text)
         
         logger.info(f"📄 Document Analysis:")
@@ -278,10 +274,9 @@ class FlexibleSOPProcessor:
             process['raw_content'] = '\n'.join(process['content_lines'])
             process['steps'] = self.extract_process_steps(process['raw_content'])
             process['estimated_steps'] = len(process['steps'])
-        
-        # Handle case where no processes detected
+ 
         if not processes:
-            # Treat entire document as single process
+           
             processes = [{
                 'id': 'PROC-001',
                 'name': 'Main Process',
@@ -296,8 +291,7 @@ class FlexibleSOPProcessor:
     def extract_process_steps(self, content: str) -> List[Dict]:
         """Extract numbered steps from process content"""
         steps = []
-        
-        # Pattern for numbered steps
+       
         step_pattern = r'^\s*(\d+)\s*\.\s*(.+?)(?=\n\s*\d+\s*\.|\n\s*[a-z]\)|$)'
         
         matches = re.finditer(step_pattern, content, re.MULTILINE | re.DOTALL)
@@ -312,10 +306,10 @@ class FlexibleSOPProcessor:
     
     def direct_processing(self, text: str, detected_processes: List[Dict]) -> Dict:
         """Process document directly without chunking"""
-        # Create enhanced text with process annotations
+         
         enhanced_text = self.enhance_text_for_llm(text, detected_processes)
         
-        # Create dynamic prompt based on detected processes
+        
         prompt = self.create_flexible_prompt(enhanced_text, detected_processes)
         
         return {
